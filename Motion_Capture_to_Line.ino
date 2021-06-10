@@ -161,7 +161,7 @@ String sendCapturedImage2LineNotify() {
     client_tcp.println("POST /api/notify HTTP/1.1");
     client_tcp.println("Connection: close"); 
     client_tcp.println("Host: notify-api.line.me");
-    client_tcp.println("Authorization: " + LineToken);
+    client_tcp.println("Authorization: Bearer " + LineToken);
     client_tcp.println("Content-Length: " + String(totalLen));
     client_tcp.println("Content-Type: multipart/form-data; boundary=Thailand");
     client_tcp.println();
