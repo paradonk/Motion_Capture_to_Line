@@ -32,14 +32,14 @@ String LineToken      = "-----------------";   //Line Notify Token
 #define HREF_GPIO_NUM     23
 #define PCLK_GPIO_NUM     22
 
-int inputPin = 12;              // GPIO No (for PIR sensor)
-int pirState = LOW;             // We start, assuming no motion detected
-int val = 0;                    // variable for reading the pin status
+int sensor = 12;              // GPIO No (for PIR sensor)
+int state  = LOW;             // Assuming no motion detected
+int val    = 0;               // Variable for reading the pin status
 
 void setup()
 {
-  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);  //disable brownout detector
-  pinMode(inputPin, INPUT);                   // pin conected to PIR motion sensor output
+  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);  // disable brownout detector
+  pinMode(sensor, INPUT);                     // pin conected to PIR motion sensor
   Serial.begin(115200);
   delay(1000);
   WiFi.mode(WIFI_STA);
@@ -115,35 +115,31 @@ void setup()
 
 void loop()
 {
-  val = digitalRead(inputPin);  // read input value
-  if (val == HIGH) 
-  {            // check if the input is HIGH
-    delay(100);
-    if (pirState == LOW) 
-    {
-      Serial.println(sendCapturedImage2LineNotify());
-      pirState = HIGH;
-      Serial.println(pirState);
+  val = digitalRead(sensor);   // read sensor value
+  if (val == HIGH) {           // check if the sensor is HIGH
+    delay(200);                // delay 200 milliseconds 
+  
+    if (state == LOW) {
+      Serial.println(sendCapturedImage2LineNotify()); 
+      state = HIGH;        // update variable state to HIGH
     }
   } 
   else 
   {
-      delay(100);    
-      if (pirState == HIGH)
+      delay(200);          // delay 200 milliseconds 
+      if (state == HIGH)
       {
-      Serial.print("Motion ended State = ");
-      pirState = LOW;
-      Serial.println(pirState);
+        state = LOW;       // update variable state to LOW
       }
   }
-}  
+} 
 
 String sendCapturedImage2LineNotify() {
   camera_fb_t * fb = NULL;
   fb = esp_camera_fb_get();  
   if(!fb) {
     Serial.println("Camera capture failed");
-    delay(100);
+    delay(500);
     ESP.restart();
     return "Camera capture failed";
   }
@@ -165,7 +161,7 @@ String sendCapturedImage2LineNotify() {
     client_tcp.println("POST /api/notify HTTP/1.1");
     client_tcp.println("Connection: close"); 
     client_tcp.println("Host: notify-api.line.me");
-    client_tcp.println("Authorization: Bearer " + LineToken);
+    client_tcp.println("Authorization: " + LineToken);
     client_tcp.println("Content-Length: " + String(totalLen));
     client_tcp.println("Content-Type: multipart/form-data; boundary=Thailand");
     client_tcp.println();
